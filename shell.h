@@ -1,14 +1,18 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef SHELL_H
+#define SHELL_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+
 /* Global Variables */
+
 extern char **environ;
+
 /* Function Prototypes */
+
 void printAlphabet(void);
 void display_prompt(void);
 char *read_command(void);
@@ -22,4 +26,5 @@ char *_strdup(const char *str);
 int _putchar(char c);
 void print_env(void);
 void handle_exit(void);
-#endif /* MAIN_H */
+
+#endif /* SHELL_H */

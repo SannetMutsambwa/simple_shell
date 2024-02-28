@@ -5,10 +5,17 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+/**
+* display_prompt - Displays the prompt for user input.
+*/
 void display_prompt(void)
 {
 printf(":) ");
 }
+/**
+* read_command - Reads a command entered by the user.
+* Return: The command entered by the user.
+*/
 char *read_command(void)
 {
 char *user_input = malloc(sizeof(char) * 100);
@@ -26,16 +33,22 @@ exit(EXIT_FAILURE);
 }
 return (user_input);
 }
+/**
+* parse_command - Parses the command string into arguments.
+* @command: The command string to parse.
+* Return: An array of arguments.
+*/
 char **parse_command(char *command)
 {
+int i = 0;
+char *token;
 char **args = malloc(sizeof(char *) * 100);
 if (args == NULL)
 {
 perror("malloc");
 exit(EXIT_FAILURE);
 }
-char *token = strtok(command, " ");
-int i = 0;
+token = strtok(command, " ");
 while (token != NULL)
 {
 args[i] = strdup(token);
@@ -50,6 +63,10 @@ i++;
 args[i] = NULL;
 return (args);
 }
+/**
+* execute_command - Executes the given command.
+* @args: The array of arguments representing the command.
+*/
 void execute_command(char **args)
 {
 pid_t pid = fork();
@@ -72,15 +89,22 @@ int status;
 waitpid(pid, &status, 0);
 }
 }
-int main(int argc, char *argv[])
+/**
+* main - Entry point of the program.
+* Return: Always 0.
+*/
+int main(void)
 {
+char *user_input;
+char **args;
+int i;
 while (1)
 {
 display_prompt();
-char *user_input = read_command();
+user_input = read_command();
 if (user_input == NULL)
 break;
-char **args = parse_command(user_input);
+args = parse_command(user_input);
 if (args == NULL)
 {
 free(user_input);
@@ -88,7 +112,7 @@ continue;
 }
 execute_command(args);
 free(user_input);
-for (int i = 0; args[i] != NULL; i++)
+for (i = 0; args[i] != NULL; i++)
 {
 free(args[i]);
 }
