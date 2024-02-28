@@ -10,7 +10,10 @@
 */
 void display_prompt(void)
 {
+if (isatty(STDIN_FILENO))
+{
 printf(":) ");
+}
 }
 /**
 * read_command - Reads a command entered by the user.
@@ -23,6 +26,10 @@ if (user_input == NULL)
 {
 perror("malloc");
 exit(EXIT_FAILURE);
+}
+if (isatty(STDIN_FILENO))
+{
+printf(":) ");
 }
 if (scanf(" %[^\n]", user_input) != 1)
 {
@@ -48,7 +55,7 @@ if (args == NULL)
 perror("malloc");
 exit(EXIT_FAILURE);
 }
-token = strtok(command, " ");
+token = strtok(command, " \t\n");
 while (token != NULL)
 {
 args[i] = strdup(token);
@@ -57,7 +64,7 @@ if (args[i] == NULL)
 perror("strdup");
 exit(EXIT_FAILURE);
 }
-token = strtok(NULL, " ");
+token = strtok(NULL, " \t\n");
 i++;
 }
 args[i] = NULL;
@@ -102,7 +109,8 @@ while (1)
 {
 display_prompt();
 user_input = read_command();
-if (user_input == NULL)
+if (user_input == NULL || strlen(user_input) == 0)
+free(user_input);
 break;
 args = parse_command(user_input);
 if (args == NULL)
