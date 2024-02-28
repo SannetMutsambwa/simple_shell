@@ -13,6 +13,7 @@ void display_prompt(void)
 if (isatty(STDIN_FILENO))
 {
 printf(":) ");
+fflush(stdout);
 }
 }
 /**
@@ -30,14 +31,20 @@ exit(EXIT_FAILURE);
 if (isatty(STDIN_FILENO))
 {
 printf(":) ");
+fflush(stdout);
 }
-if (scanf(" %[^\n]", user_input) != 1)
+if (fgets(user_input, 100, stdin) == NULL)
 {
-printf(":( ");
-perror("scanf");
+if (feof(stdin))
+{
+free(user_input);
+return (NULL);
+}
+perror("fgets");
 free(user_input);
 exit(EXIT_FAILURE);
 }
+user_input[strcspn(user_input, "\n")] = 0;
 return (user_input);
 }
 /**
@@ -55,7 +62,7 @@ if (args == NULL)
 perror("malloc");
 exit(EXIT_FAILURE);
 }
-token = strtok(command, " \t\n");
+token = strtok(command, " ");
 while (token != NULL)
 {
 args[i] = strdup(token);
@@ -64,7 +71,7 @@ if (args[i] == NULL)
 perror("strdup");
 exit(EXIT_FAILURE);
 }
-token = strtok(NULL, " \t\n");
+token = strtok(NULL, " ");
 i++;
 }
 args[i] = NULL;
@@ -109,9 +116,16 @@ while (1)
 {
 display_prompt();
 user_input = read_command();
-if (user_input == NULL || strlen(user_input) == 0)
-free(user_input);
+if (user_input == NULL)
+{
+printf("\n");
 break;
+}
+if (strlen(user_input) == 0)
+{
+free(user_input);
+continue;
+}
 args = parse_command(user_input);
 if (args == NULL)
 {
