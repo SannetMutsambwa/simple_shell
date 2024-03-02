@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <errno.h>
+#define MAX_ARGS 100
 
 /* Global Variables */
 
@@ -16,6 +18,8 @@ extern char **environ;
 void printAlphabet(void);
 void display_prompt(void);
 char *read_command(void);
+void builtin_exit(void);
+char *read_command_from_file(FILE *file);
 char **parse_command(char *command);
 void execute_command(char **args);
 int _strcmp(const char *s1, const char *s2);

@@ -1,99 +1,144 @@
-#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-/**
-* display_prompt - Displays the prompt for user input.
-*/
+#include <errno.h>
+#define MAX_ARGS 100
+void display_prompt(void);
+char *read_command(void);
+char **parse_command(char *user_input);
+char *search_path(char *command);
+void execute_command(char **args, char *argv_0);
+int main(int argc, char **argv)
+{
+char *user_input;
+char **args;
+char *program_name = argc > 0 ? argv[0] : "hsh";
+if (argc == 1)
+{
+while (1)
+{
+display_prompt();
+user_input = read_command();
+args = parse_command(user_input);
+if (args[0] == NULL)
+{
+free(user_input);
+free(args);
+continue;
+}
+if (strcmp(args[0], "exit") == 0)
+{
+free(user_input);
+free(args);
+break;
+}
+execute_command(args, program_name);
+free(user_input);
+free(args);
+}
+}
+else if (argc == 2)
+{
+fprintf(stderr, "Usage: %s\n", program_name);
+exit(EXIT_FAILURE);
+}
+else
+{
+fprintf(stderr, "Usage: %s\n", program_name);
+exit(EXIT_FAILURE);
+}
+return (0);
+}
 void display_prompt(void)
 {
 if (isatty(STDIN_FILENO))
 {
-printf(":) ");
+printf("($) ");
 fflush(stdout);
 }
 }
-/**
-* read_command - Reads a command entered by the user.
-* Return: The command entered by the user.
-*/
 char *read_command(void)
 {
-char *user_input = malloc(sizeof(char) * 100);
-if (user_input == NULL)
-{
-perror("malloc");
-exit(EXIT_FAILURE);
-}
+char *user_input = NULL;
+size_t bufsize = 0;
 if (isatty(STDIN_FILENO))
 {
-printf(":) ");
-fflush(stdout);
+printf(" ");
 }
-if (fgets(user_input, 100, stdin) == NULL)
-{
-if (feof(stdin))
+if (getline(&user_input, &bufsize, stdin) == -1)
 {
 free(user_input);
-return (NULL);
+if (isatty(STDIN_FILENO))
+printf("\n");
+exit(EXIT_SUCCESS);
 }
-perror("fgets");
-free(user_input);
-exit(EXIT_FAILURE);
-}
-user_input[strcspn(user_input, "\n")] = 0;
 return (user_input);
 }
-/**
-* parse_command - Parses the command string into arguments.
-* @command: The command string to parse.
-* Return: An array of arguments.
-*/
-char **parse_command(char *command)
+char **parse_command(char *user_input)
 {
-int i = 0;
 char *token;
-char **args = malloc(sizeof(char *) * 100);
-if (args == NULL)
+int i = 0;
+char **args = malloc(MAX_ARGS * sizeof(char *));
+if (!args)
 {
-perror("malloc");
+fprintf(stderr, "Memory allocation failed\n");
 exit(EXIT_FAILURE);
 }
-token = strtok(command, " ");
+token = strtok(user_input, " \t\n");
 while (token != NULL)
 {
-args[i] = strdup(token);
-if (args[i] == NULL)
-{
-perror("strdup");
-exit(EXIT_FAILURE);
-}
-token = strtok(NULL, " ");
-i++;
+args[i++] = token;
+token = strtok(NULL, " \t\n");
 }
 args[i] = NULL;
 return (args);
 }
-/**
-* execute_command - Executes the given command.
-* @args: The array of arguments representing the command.
-*/
-void execute_command(char **args)
+char *search_path(char *command)
 {
-pid_t pid = fork();
+char *path = getenv("PATH");
+char *path_copy = strdup(path);
+char *token = strtok(path_copy, ":");
+while (token != NULL)
+{
+char *path_to_exec = malloc(strlen(token) + strlen(command) + 2);
+strcpy(path_to_exec, token);
+strcat(path_to_exec, "/");
+strcat(path_to_exec, command);
+if (access(path_to_exec, X_OK) == 0)
+{
+free(path_copy);
+return (path_to_exec);
+}
+free(path_to_exec);
+token = strtok(NULL, ":");
+}
+free(path_copy);
+return (NULL);
+}
+void execute_command(char **args, char *argv_0)
+{
+pid_t pid;
+char *full_path;
+full_path = search_path(args[0]);
+pid = fork();
+if (full_path == NULL)
+{
+fprintf(stderr, "%s: 1: %s: not found\n", argv_0, args[0]);
+return;
+}
 if (pid < 0)
 {
-perror("fork");
+fprintf(stderr, "%s: unable to fork\n", argv_0);
 exit(EXIT_FAILURE);
 }
 else if (pid == 0)
 {
-if (execvp(args[0], args) == -1)
+if (execvp(full_path, args) == -1)
 {
-perror("execvp");
+fprintf(stderr, "%s: 1: %s: command not found\n", argv_0, args[0]);
 exit(EXIT_FAILURE);
 }
 }
@@ -102,43 +147,5 @@ else
 int status;
 waitpid(pid, &status, 0);
 }
-}
-/**
-* main - Entry point of the program.
-* Return: Always 0.
-*/
-int main(void)
-{
-char *user_input;
-char **args;
-int i;
-while (1)
-{
-display_prompt();
-user_input = read_command();
-if (user_input == NULL)
-{
-printf("\n");
-break;
-}
-if (strlen(user_input) == 0)
-{
-free(user_input);
-continue;
-}
-args = parse_command(user_input);
-if (args == NULL)
-{
-free(user_input);
-continue;
-}
-execute_command(args);
-free(user_input);
-for (i = 0; args[i] != NULL; i++)
-{
-free(args[i]);
-}
-free(args);
-}
-return (0);
+free(full_path);
 }
