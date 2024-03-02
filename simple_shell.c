@@ -11,6 +11,13 @@ char *read_command(void);
 char **parse_command(char *user_input);
 char *search_path(char *command);
 void execute_command(char **args, char *argv_0);
+/**
+* main - Entry point of the simple shell program.
+* @argc: The number of arguments passed to the program.
+* @argv: An array of strings containing the arguments.
+* Return: Always 0.
+*/
+
 int main(int argc, char **argv)
 {
 char *user_input;
@@ -52,6 +59,9 @@ exit(EXIT_FAILURE);
 }
 return (0);
 }
+/**
+* display_prompt - Displays the shell prompt.
+*/
 void display_prompt(void)
 {
 if (isatty(STDIN_FILENO))
@@ -60,6 +70,10 @@ printf("($) ");
 fflush(stdout);
 }
 }
+/**
+* read_command - Reads a command from standard input
+* Return: A pointer to the user input.
+*/
 char *read_command(void)
 {
 char *user_input = NULL;
@@ -77,6 +91,11 @@ exit(EXIT_SUCCESS);
 }
 return (user_input);
 }
+/**
+* parse_command - Parses a command string into an array of arguments.
+* @user_input: The command string to parse.
+* Return: An array of strings containing the arguments.
+*/
 char **parse_command(char *user_input)
 {
 char *token;
@@ -96,6 +115,11 @@ token = strtok(NULL, " \t\n");
 args[i] = NULL;
 return (args);
 }
+/**
+* search_path - Searches for the path of a command..
+* @command: The command to search for.
+* Return: The full path of the command if found, otherwise NULL.
+*/
 char *search_path(char *command)
 {
 char *path = getenv("PATH");
@@ -118,6 +142,11 @@ token = strtok(NULL, ":");
 free(path_copy);
 return (NULL);
 }
+/**
+* execute_command - Executes a command with given arguments.
+* @args: An array of strings with the command and its arguments.
+* @argv_0: The name of the program.
+*/
 void execute_command(char **args, char *argv_0)
 {
 pid_t pid;
